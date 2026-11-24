@@ -145,6 +145,47 @@ class MatchManagementTest extends TestCase
             ->assertJsonPath('data.skor_home', 0);
     }
 
+    public function test_admin_can_delete_a_match(): void
+    {
+        $admin = $this->createAdmin();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+        $match = MatchModel::create([
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan Utama',
+            'babak' => 'Penyisihan',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.matches.destroy', $match))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('matches', ['id' => $match->id]);
+    }
+
+    public function test_non_admin_cannot_delete_a_match(): void
+    {
+        $participant = User::factory()->create();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+        $match = MatchModel::create([
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan Utama',
+            'babak' => 'Penyisihan',
+        ]);
+
+        $this->actingAs($participant)
+            ->delete(route('admin.matches.destroy', $match))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('matches', ['id' => $match->id]);
+    }
+
     private function createAdmin(): User
     {
         $admin = User::factory()->create();

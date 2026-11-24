@@ -77,4 +77,11 @@ class MatchController extends Controller
             ],
         ]);
     }
+
+    public function destroy(MatchModel $match)
+    {
+        $match->delete();
+
+        return redirect()->back()->with('success', 'Jadwal pertandingan berhasil dihapus!');
+    }
 }

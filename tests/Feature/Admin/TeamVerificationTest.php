@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\MatchModel;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TeamVerificationTest extends TestCase
@@ -105,5 +108,79 @@ class TeamVerificationTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('approved', $team->fresh()->status_verifikasi);
+    }
+
+    public function test_admin_can_delete_a_team_and_its_associated_files_and_matches(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->save();
+
+        $logoPath = UploadedFile::fake()->create('logo.jpg', 100, 'image/jpeg')->store('logos', 'public');
+        $berkasPath = UploadedFile::fake()->create('syarat.pdf', 100)->store('berkas', 'public');
+
+        $team = Team::create([
+            'user_id' => User::factory()->create()->id,
+            'nama_tim' => 'Garut United',
+            'asal_sekolah' => 'SMA Garut',
+            'nama_pelatih' => 'Pelatih',
+            'no_wa' => '08123456789',
+            'logo_tim' => $logoPath,
+            'berkas_syarat' => $berkasPath,
+            'status_verifikasi' => 'approved',
+        ]);
+
+        $opponent = Team::create([
+            'user_id' => User::factory()->create()->id,
+            'nama_tim' => 'Tasik FC',
+            'asal_sekolah' => 'SMA Tasik',
+            'nama_pelatih' => 'Pelatih Lawan',
+            'no_wa' => '08987654321',
+            'status_verifikasi' => 'approved',
+        ]);
+
+        $match = MatchModel::create([
+            'team_home_id' => $team->id,
+            'team_away_id' => $opponent->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan A',
+            'babak' => 'Penyisihan',
+        ]);
+
+        Storage::disk('public')->assertExists($logoPath);
+        Storage::disk('public')->assertExists($berkasPath);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.teams.destroy', $team))
+            ->assertRedirect(route('admin.teams.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('teams', ['id' => $team->id]);
+        $this->assertDatabaseMissing('matches', ['id' => $match->id]);
+        $this->assertDatabaseHas('teams', ['id' => $opponent->id]);
+
+        Storage::disk('public')->assertMissing($logoPath);
+        Storage::disk('public')->assertMissing($berkasPath);
+    }
+
+    public function test_non_admin_cannot_delete_a_team(): void
+    {
+        $participant = User::factory()->create();
+
+        $team = Team::create([
+            'user_id' => User::factory()->create()->id,
+            'nama_tim' => 'Garut United',
+            'asal_sekolah' => 'SMA Garut',
+            'nama_pelatih' => 'Pelatih',
+            'no_wa' => '08123456789',
+            'status_verifikasi' => 'approved',
+        ]);
+
+        $this->actingAs($participant)
+            ->delete(route('admin.teams.destroy', $team))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('teams', ['id' => $team->id]);
     }
 }
