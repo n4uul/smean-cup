@@ -1,0 +1,167 @@
+<?php
+
+namespace Tests\Feature\Admin;
+
+use App\Models\MatchModel;
+use App\Models\Team;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class MatchManagementTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_view_match_management_page(): void
+    {
+        $admin = $this->createAdmin();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+
+        MatchModel::create([
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan Utama',
+            'babak' => 'Penyisihan',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.matches.index'))
+            ->assertOk()
+            ->assertSee('Home Team')
+            ->assertSee('Away Team')
+            ->assertSee('Penyisihan');
+    }
+
+    public function test_admin_can_schedule_a_match_between_approved_teams(): void
+    {
+        $admin = $this->createAdmin();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+
+        $this->actingAs($admin)
+            ->post(route('admin.matches.store'), [
+                'team_home_id' => $home->id,
+                'team_away_id' => $away->id,
+                'waktu_tanding' => '2026-12-01T10:00',
+                'lapangan' => 'Lapangan Utama',
+                'babak' => 'Penyisihan',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('matches', [
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'status_match' => 'upcoming',
+            'skor_home' => 0,
+            'skor_away' => 0,
+        ]);
+    }
+
+    public function test_admin_cannot_schedule_a_match_with_the_same_team_twice(): void
+    {
+        $admin = $this->createAdmin();
+        $team = $this->createTeam('Only Team');
+
+        $this->actingAs($admin)
+            ->from(route('admin.matches.index'))
+            ->post(route('admin.matches.store'), [
+                'team_home_id' => $team->id,
+                'team_away_id' => $team->id,
+                'waktu_tanding' => '2026-12-01T10:00',
+                'lapangan' => 'Lapangan Utama',
+                'babak' => 'Penyisihan',
+            ])
+            ->assertSessionHasErrors('team_home_id');
+
+        $this->assertDatabaseCount('matches', 0);
+    }
+
+    public function test_admin_can_update_match_score_and_status(): void
+    {
+        $admin = $this->createAdmin();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+        $match = MatchModel::create([
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan Utama',
+            'babak' => 'Penyisihan',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.matches.update', $match), [
+                'skor_home' => 2,
+                'skor_away' => 1,
+                'status_match' => 'live',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('matches', [
+            'id' => $match->id,
+            'skor_home' => 2,
+            'skor_away' => 1,
+            'status_match' => 'live',
+        ]);
+    }
+
+    public function test_admin_can_adjust_live_score_without_allowing_negative_values(): void
+    {
+        $admin = $this->createAdmin();
+        $home = $this->createTeam('Home Team');
+        $away = $this->createTeam('Away Team');
+        $match = MatchModel::create([
+            'team_home_id' => $home->id,
+            'team_away_id' => $away->id,
+            'waktu_tanding' => '2026-12-01 10:00:00',
+            'lapangan' => 'Lapangan Utama',
+            'babak' => 'Penyisihan',
+        ]);
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.matches.updateScore', $match), [
+                'side' => 'home',
+                'action' => 'increment',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.skor_home', 1);
+
+        $this->patchJson(route('admin.matches.updateScore', $match), [
+            'side' => 'home',
+            'action' => 'decrement',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.skor_home', 0);
+
+        $this->patchJson(route('admin.matches.updateScore', $match), [
+            'side' => 'home',
+            'action' => 'decrement',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.skor_home', 0);
+    }
+
+    private function createAdmin(): User
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->save();
+
+        return $admin;
+    }
+
+    private function createTeam(string $name): Team
+    {
+        return Team::create([
+            'user_id' => User::factory()->create()->id,
+            'nama_tim' => $name,
+            'asal_sekolah' => 'SMA Garut',
+            'nama_pelatih' => 'Pelatih',
+            'no_wa' => '08123456789',
+            'status_verifikasi' => 'approved',
+        ]);
+    }
+}

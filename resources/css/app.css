@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .hero-mesh-background {
+        background-color: #1b4d22;
+        background-image:
+            radial-gradient(ellipse at 86% 100%, rgba(241, 196, 15, 0.3) 0%, transparent 46%),
+            radial-gradient(ellipse at 78% 24%, rgba(46, 204, 113, 0.38) 0%, transparent 46%),
+            linear-gradient(116deg, #1b4d22 0%, #1f7138 56%, #2ecc71 100%);
+    }
+
+    .hero-mascot-backdrop {
+        background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.2) 0%, rgba(241, 196, 15, 0.08) 46%, transparent 76%);
+    }
+}
+
+@layer utilities {
+    @keyframes floatSlow {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-6px);
+        }
+    }
+
+    .animate-float {
+        animation: floatSlow 6s ease-in-out infinite;
+    }
+}
