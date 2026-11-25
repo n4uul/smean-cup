@@ -5,7 +5,7 @@
                 <span class="h-2 w-2 rounded-full bg-garuda-mint"></span>
                 Area Resmi Tim Terdaftar
             </div>
-            <h1 class="font-display text-4xl uppercase tracking-wider text-garuda-white sm:text-5xl">
+            <h1 class="font-display text-4xl uppercase tracking-wider text-garuda-obsidian sm:text-5xl">
                 Dashboard <span class="text-garuda-gold">Tim Kamu</span>
             </h1>
         </div>
@@ -17,7 +17,7 @@
             </div>
         @endif
 
-        @if (!$team)
+        @if ($teams->isEmpty())
             <section class="max-w-3xl rounded-2xl border border-[#315635] bg-garuda-pitch p-6 shadow-sm sm:p-8">
                 <h2 class="mb-2 font-heading text-xl font-bold uppercase tracking-wide text-garuda-white">
                     Formulir Pendaftaran Turnamen
@@ -27,12 +27,28 @@
                     <strong class="text-garuda-gold">SMEAN Cup 2026</strong>.
                 </p>
 
+                <div class="mb-6 rounded-xl border border-garuda-mint/30 bg-garuda-obsidian/50 p-4 text-sm text-gray-200">
+                    Satu akun penanggung jawab dapat mendaftarkan hingga
+                    <strong class="text-garuda-white">5 tim</strong> untuk sekolah yang sama. Nama tim akan diberi
+                    label otomatis <strong class="text-garuda-gold">A–E</strong> jika mengirim lebih dari satu tim.
+                </div>
+
+                @if ($errors->any())
+                    <div class="mb-6 rounded-xl border border-red-400/40 bg-red-950/60 p-4 text-sm text-red-200" role="alert">
+                        <ul class="list-inside list-disc">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('teams.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="nama_tim" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Nama Tim Futsal</label>
+                            <label for="nama_tim" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Nama Dasar Tim / Sekolah</label>
                             <input
                                 id="nama_tim"
                                 type="text"
@@ -50,6 +66,28 @@
                         </div>
 
                         <div>
+                            <label for="jumlah_tim" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Jumlah Tim yang Dikirim</label>
+                            <select
+                                id="jumlah_tim"
+                                name="jumlah_tim"
+                                required
+                                aria-invalid="{{ $errors->has('jumlah_tim') ? 'true' : 'false' }}"
+                                aria-describedby="jumlah_tim-info jumlah_tim-error"
+                                class="mt-1 w-full rounded-xl border border-gray-700 bg-garuda-obsidian px-4 py-3 text-garuda-white transition focus:border-garuda-mint focus:outline-none focus:ring-garuda-mint"
+                            >
+                                @foreach (range(1, 5) as $jumlah)
+                                    <option value="{{ $jumlah }}" @selected(old('jumlah_tim', 1) == $jumlah)>{{ $jumlah }} tim</option>
+                                @endforeach
+                            </select>
+                            <span id="jumlah_tim-info" class="mt-1 block text-xs text-gray-400">Untuk lebih dari 1 tim, sistem menambahkan label A–E pada nama setiap tim.</span>
+                            @error('jumlah_tim')
+                                <span id="jumlah_tim-error" class="mt-1 block text-xs text-red-400">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                    </div>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
                             <label for="asal_sekolah" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Asal Sekolah</label>
                             <input
                                 id="asal_sekolah"
@@ -60,18 +98,16 @@
                                 placeholder="Contoh: SMKN 1 Garut"
                                 required
                                 aria-invalid="{{ $errors->has('asal_sekolah') ? 'true' : 'false' }}"
-                                aria-describedby="asal_sekolah-error"
+                                aria-describedby="asal_sekolah-info asal_sekolah-error"
                                 class="mt-1 w-full rounded-xl border border-gray-700 bg-garuda-obsidian px-4 py-3 text-garuda-white transition focus:border-garuda-mint focus:outline-none focus:ring-garuda-mint"
                             >
+                            <span id="asal_sekolah-info" class="mt-1 block text-xs text-gray-400">Kuota dan label tim dihitung berdasarkan nama sekolah, tanpa membedakan kapitalisasi atau spasi di awal/akhir.</span>
                             @error('asal_sekolah')
                                 <span id="asal_sekolah-error" class="mt-1 block text-xs text-red-400">{{ $message }}</span>
                             @enderror
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="nama_pelatih" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Nama Pelatih / Official</label>
+                            <label for="nama_pelatih" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Nama Pelatih / Official Penanggung Jawab</label>
                             <input
                                 id="nama_pelatih"
                                 type="text"
@@ -87,9 +123,11 @@
                                 <span id="nama_pelatih-error" class="mt-1 block text-xs text-red-400">{{ $message }}</span>
                             @enderror
                         </div>
+                    </div>
 
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="no_wa" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">No. WhatsApp (Aktif)</label>
+                            <label for="no_wa" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">No. WhatsApp Penanggung Jawab</label>
                             <input
                                 id="no_wa"
                                 type="tel"
@@ -110,7 +148,7 @@
 
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                            <label for="logo_tim" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Logo Tim (PNG/JPG)</label>
+                            <label for="logo_tim" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Logo Sekolah / Tim (PNG/JPG)</label>
                             <input
                                 id="logo_tim"
                                 type="file"
@@ -120,14 +158,14 @@
                                 aria-describedby="logo_tim-help logo_tim-error"
                                 class="w-full text-sm text-gray-400 file:mr-4 file:rounded-xl file:border-0 file:bg-garuda-pitch file:px-4 file:py-2.5 file:font-heading file:text-xs file:uppercase file:text-garuda-mint hover:file:bg-emerald-950"
                             >
-                            <p id="logo_tim-help" class="mt-1 text-xs text-gray-500">JPG atau PNG, maksimal 2 MB.</p>
+                            <p id="logo_tim-help" class="mt-1 text-xs text-gray-500">JPG atau PNG, maksimal 2 MB. Logo ini digunakan bersama untuk semua tim yang didaftarkan.</p>
                             @error('logo_tim')
                                 <span id="logo_tim-error" class="mt-1 block text-xs text-red-400">{{ $message }}</span>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="berkas_syarat" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Berkas Syarat</label>
+                            <label for="berkas_syarat" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-300">Berkas Persyaratan Sekolah</label>
                             <input
                                 id="berkas_syarat"
                                 type="file"
@@ -152,62 +190,57 @@
                 </form>
             </section>
         @else
-            @php
-                $statusColors = [
-                    'pending' => 'border-amber-500/40 bg-amber-500/20 text-garuda-gold',
-                    'approved' => 'border-emerald-500/40 bg-emerald-500/20 text-garuda-mint',
-                    'rejected' => 'border-red-500/40 bg-red-500/20 text-red-400',
-                ];
-                $statusText = [
-                    'pending' => 'Menunggu Verifikasi Panitia',
-                    'approved' => 'Terkonfirmasi & Terverifikasi',
-                    'rejected' => 'Ditolak / Perlu Revisi',
-                ];
-            @endphp
-
-            <section class="max-w-2xl rounded-2xl border border-[#315635] bg-garuda-pitch p-6 shadow-sm sm:p-8">
-                <div class="mb-6 flex flex-col justify-between gap-4 border-b border-garuda-pitch pb-4 sm:flex-row sm:items-center">
-                    <div>
-                        <span class="font-sans text-xs uppercase text-gray-400">Status Tim Anda</span>
-                        <h2 class="font-display text-3xl uppercase tracking-wider text-garuda-white">{{ $team->nama_tim }}</h2>
-                    </div>
-                    <span class="inline-flex w-fit rounded-full border px-4 py-1.5 font-heading text-xs font-bold uppercase tracking-wider {{ $statusColors[$team->status_verifikasi] ?? 'border-gray-700 bg-gray-700 text-gray-300' }}">
-                        {{ $statusText[$team->status_verifikasi] ?? ucfirst($team->status_verifikasi) }}
-                    </span>
+            <section>
+                <p class="mb-4 font-heading text-xs font-semibold uppercase tracking-widest text-garuda-pitch">Status Pendaftaran Sekolah</p>
+                <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    @foreach ($teams as $team)
+                        @php
+                            [$statusLabel, $statusClass] = match ($team->status_verifikasi) {
+                                'approved' => ['Terkonfirmasi & Terverifikasi', 'border-emerald-300 bg-emerald-50 text-emerald-800'],
+                                'rejected' => ['Ditolak / Perlu Revisi', 'border-red-300 bg-red-50 text-red-800'],
+                                default => ['Menunggu Verifikasi Panitia', 'border-amber-300 bg-amber-50 text-amber-800'],
+                            };
+                        @endphp
+                        <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <div class="mb-5 flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+                                <div class="flex items-center gap-3">
+                                    @if ($team->logo_tim)
+                                        <img src="{{ asset('storage/'.$team->logo_tim) }}" alt="Logo {{ $team->nama_tim }}" class="h-14 w-14 rounded-lg border border-gray-200 bg-white object-contain p-1">
+                                    @endif
+                                    <div>
+                                        <span class="font-heading text-xs uppercase tracking-wider text-gray-500">Tim Terdaftar</span>
+                                        <h2 class="font-display text-2xl uppercase tracking-wide text-garuda-obsidian">{{ $team->nama_tim }}</h2>
+                                    </div>
+                                </div>
+                                <span class="inline-flex rounded-full border px-3 py-1 font-heading text-[10px] font-bold uppercase {{ $statusClass }}">{{ $statusLabel }}</span>
+                            </div>
+                            <dl class="grid grid-cols-1 gap-3 font-sans text-sm sm:grid-cols-2">
+                                <div>
+                                    <dt class="font-heading text-xs uppercase text-gray-500">Asal Sekolah</dt>
+                                    <dd class="mt-1 font-semibold text-garuda-obsidian">{{ $team->asal_sekolah }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-heading text-xs uppercase text-gray-500">Penanggung Jawab</dt>
+                                    <dd class="mt-1 font-semibold text-garuda-obsidian">{{ $team->nama_pelatih }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-heading text-xs uppercase text-gray-500">No. WhatsApp</dt>
+                                    <dd class="mt-1 font-semibold text-garuda-obsidian">{{ $team->no_wa }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-heading text-xs uppercase text-gray-500">Berkas Persyaratan</dt>
+                                    <dd class="mt-1">
+                                        @if ($team->berkas_syarat)
+                                            <a href="{{ asset('storage/'.$team->berkas_syarat) }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-garuda-pitch hover:underline">Lihat berkas</a>
+                                        @else
+                                            <span class="text-gray-500">Belum ada berkas</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                            </dl>
+                        </article>
+                    @endforeach
                 </div>
-
-                @if ($team->logo_tim)
-                    <div class="mb-6">
-                        <img src="{{ asset('storage/'.$team->logo_tim) }}" alt="Logo {{ $team->nama_tim }}" class="h-20 w-20 rounded-xl border border-garuda-pitch bg-garuda-obsidian object-contain p-2">
-                    </div>
-                @endif
-
-                <dl class="grid grid-cols-1 gap-4 font-sans text-sm text-gray-300 sm:grid-cols-2">
-                    <div class="rounded-xl border border-gray-800 bg-garuda-obsidian p-4">
-                        <dt class="font-heading text-xs uppercase text-gray-500">Asal Sekolah</dt>
-                        <dd class="mt-1 text-base font-semibold text-garuda-white">{{ $team->asal_sekolah }}</dd>
-                    </div>
-                    <div class="rounded-xl border border-gray-800 bg-garuda-obsidian p-4">
-                        <dt class="font-heading text-xs uppercase text-gray-500">Nama Pelatih</dt>
-                        <dd class="mt-1 text-base font-semibold text-garuda-white">{{ $team->nama_pelatih }}</dd>
-                    </div>
-                    <div class="rounded-xl border border-gray-800 bg-garuda-obsidian p-4">
-                        <dt class="font-heading text-xs uppercase text-gray-500">No. WhatsApp</dt>
-                        <dd class="mt-1 text-base font-semibold text-garuda-white">{{ $team->no_wa }}</dd>
-                    </div>
-                    <div class="rounded-xl border border-gray-800 bg-garuda-obsidian p-4">
-                        <dt class="font-heading text-xs uppercase text-gray-500">Berkas Syarat</dt>
-                        <dd class="mt-1">
-                            @if ($team->berkas_syarat)
-                                <a href="{{ asset('storage/'.$team->berkas_syarat) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-semibold text-garuda-mint hover:underline">
-                                    Lihat berkas upload
-                                </a>
-                            @else
-                                <span class="text-gray-500">Belum ada berkas</span>
-                            @endif
-                        </dd>
-                    </div>
-                </dl>
             </section>
         @endif
     </div>

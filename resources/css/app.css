@@ -17,9 +17,73 @@
             radial-gradient(ellipse at 15% 15%, rgba(46, 204, 113, 0.25) 0%, transparent 40%),
             linear-gradient(124deg, #0d2b14 0%, #165626 52%, #1e873d 100%);
     }
+
+    .hype-progress-fill {
+        transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .hype-vote-button {
+        transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .hype-vote-button:not(:disabled):hover {
+        transform: translateY(-2px);
+    }
+
+    .hype-vote-button:active {
+        transform: scale(0.97);
+    }
+
+    .hype-vote-button.is-cheering {
+        animation: hype-cheer 520ms ease;
+    }
+
+    @keyframes hype-cheer {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        45% {
+            transform: scale(1.05);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hype-progress-fill,
+        .hype-vote-button,
+        .hype-vote-button.is-cheering {
+            animation: none;
+            transition: none;
+        }
+    }
 }
 
 @layer utilities {
+    .blueprint-grid-background {
+        background-color: #F8F9FA;
+        background-image:
+            linear-gradient(to right, rgba(17, 19, 21, 0.055) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(17, 19, 21, 0.055) 1px, transparent 1px);
+        background-size: 72px 72px;
+        isolation: isolate;
+        position: relative;
+    }
+
+    .blueprint-grid-background.blueprint-grid-canvas-active {
+        background-image: none;
+    }
+
+    .blueprint-grid-canvas {
+        display: block;
+        height: 100vh;
+        inset: 0;
+        pointer-events: none;
+        position: fixed;
+        width: 100vw;
+        z-index: -1;
+    }
+
     @keyframes floatSlow {
         0%,
         100% {

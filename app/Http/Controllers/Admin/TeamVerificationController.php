@@ -43,12 +43,16 @@ class TeamVerificationController extends Controller
                 ->delete();
 
             // Hapus file logo tim jika ada
-            if ($team->logo_tim && Storage::disk('public')->exists($team->logo_tim)) {
+            if ($team->logo_tim
+                && ! Team::where('logo_tim', $team->logo_tim)->whereKeyNot($team->getKey())->exists()
+                && Storage::disk('public')->exists($team->logo_tim)) {
                 Storage::disk('public')->delete($team->logo_tim);
             }
 
             // Hapus berkas syarat jika ada
-            if ($team->berkas_syarat && Storage::disk('public')->exists($team->berkas_syarat)) {
+            if ($team->berkas_syarat
+                && ! Team::where('berkas_syarat', $team->berkas_syarat)->whereKeyNot($team->getKey())->exists()
+                && Storage::disk('public')->exists($team->berkas_syarat)) {
                 Storage::disk('public')->delete($team->berkas_syarat);
             }
 

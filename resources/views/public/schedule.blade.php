@@ -45,39 +45,254 @@
                 return element;
             }
 
-            function createTeamSummary(team, fallback, alignment) {
+            function matchStatusPresentation(status) {
+                if (status === 'live') {
+                    return {
+                        className: 'rounded-full bg-red-100 px-3 py-1 font-semibold uppercase tracking-wide text-red-800',
+                        label: 'LIVE',
+                    };
+                }
+                if (status === 'finished') {
+                    return {
+                        className: 'rounded-full bg-emerald-100 px-3 py-1 font-semibold uppercase tracking-wide text-emerald-800',
+                        label: 'SELESAI',
+                    };
+                }
+
+                return {
+                    className: 'rounded-full bg-amber-100 px-3 py-1 font-semibold uppercase tracking-wide text-amber-800',
+                    label: 'AKAN DATANG',
+                };
+            }
+
+            function createTeamSummary(team, fallback, alignment, side) {
                 const wrapper = createElement('div', `col-span-4 text-center ${alignment}`);
+                const name = createElement('h2', 'truncate font-heading text-sm font-bold text-garuda-obsidian sm:text-base', team?.nama_tim || fallback);
+                const school = createElement('p', 'truncate text-xs text-gray-500', team?.asal_sekolah || '');
+                name.dataset.teamName = side;
+                school.dataset.teamSchool = side;
                 wrapper.append(
-                    createElement('h2', 'truncate font-heading text-sm font-bold text-garuda-obsidian sm:text-base', team?.nama_tim || fallback),
-                    createElement('p', 'truncate text-xs text-gray-500', team?.asal_sekolah || ''),
+                    name,
+                    school,
                 );
                 return wrapper;
             }
 
+            function updateHypeDisplay(card, homeCount, awayCount) {
+                const safeHomeCount = Math.max(0, Number(homeCount) || 0);
+                const safeAwayCount = Math.max(0, Number(awayCount) || 0);
+                const totalCount = safeHomeCount + safeAwayCount;
+                const homePercent = totalCount === 0 ? 0 : Math.round((safeHomeCount / totalCount) * 100);
+                const awayPercent = totalCount === 0 ? 0 : 100 - homePercent;
+                const homeName = card.querySelector('[data-team-name="home"]').textContent;
+                const awayName = card.querySelector('[data-team-name="away"]').textContent;
+                const progress = card.querySelector('[data-hype-progress]');
+
+                card.querySelector('[data-hype-bar="home"]').style.width = `${homePercent}%`;
+                card.querySelector('[data-hype-bar="away"]').style.width = `${awayPercent}%`;
+                card.querySelector('[data-hype-percent="home"]').textContent = `${homeName} ${homePercent}%`;
+                card.querySelector('[data-hype-percent="away"]').textContent = `${awayPercent}% ${awayName}`;
+                card.querySelector('[data-hype-total]').textContent = `${totalCount} dukungan`;
+                progress.setAttribute('aria-valuenow', String(homePercent));
+                progress.setAttribute(
+                    'aria-label',
+                    `${homeName}: ${homePercent}% dukungan; ${awayName}: ${awayPercent}% dukungan`,
+                );
+
+                for (const countElement of card.querySelectorAll('[data-hype-count="home"]')) {
+                    countElement.textContent = String(safeHomeCount);
+                }
+                for (const countElement of card.querySelectorAll('[data-hype-count="away"]')) {
+                    countElement.textContent = String(safeAwayCount);
+                }
+                card.querySelector('button[data-hype-side="home"]').setAttribute(
+                    'aria-label',
+                    `Dukung ${homeName}. ${safeHomeCount} dukungan.`,
+                );
+                card.querySelector('button[data-hype-side="away"]').setAttribute(
+                    'aria-label',
+                    `Dukung ${awayName}. ${safeAwayCount} dukungan.`,
+                );
+            }
+
+            function createHypeButton(match, side, teamName, count) {
+                const colorClass = side === 'home'
+                    ? 'bg-garuda-mint hover:bg-emerald-400'
+                    : 'bg-garuda-gold hover:bg-yellow-300';
+                const button = createElement(
+                    'button',
+                    `hype-vote-button flex min-w-0 items-center justify-between gap-2 rounded-xl ${colorClass} px-3 py-2.5 text-left font-heading text-xs font-bold uppercase text-garuda-obsidian shadow-sm hover:shadow-md disabled:cursor-wait disabled:opacity-70 sm:text-[11px]`,
+                );
+                const label = createElement('span', 'truncate', `🔥 Dukung ${teamName}`);
+                const counter = createElement('span', 'inline-flex min-w-8 shrink-0 items-center justify-center rounded-full bg-black/10 px-2 py-1 text-xs tabular-nums', String(count));
+
+                button.type = 'button';
+                button.dataset.matchId = String(match.id);
+                button.dataset.hypeSide = side;
+                button.setAttribute('aria-label', `Dukung ${teamName}. ${count} dukungan.`);
+                counter.dataset.hypeCount = side;
+                button.append(label, counter);
+
+                return button;
+            }
+
+            function createHypeSection(match) {
+                const homeName = match.home_team?.nama_tim || 'Tim Home';
+                const awayName = match.away_team?.nama_tim || 'Tim Away';
+                const section = createElement('section', 'mt-4 border-t border-gray-100 pt-4');
+                const heading = createElement('div', 'mb-3 flex items-center justify-between gap-2');
+                const title = createElement('h3', 'font-heading text-xs font-bold uppercase tracking-wide text-garuda-obsidian', 'Dukungan Suporter');
+                const total = createElement('span', 'text-xs text-gray-500', '0 dukungan');
+                total.dataset.hypeTotal = '';
+                heading.append(title, total);
+
+                const percentages = createElement('div', 'mb-1 flex items-center justify-between gap-2 text-xs font-semibold');
+                const homePercentage = createElement('span', 'min-w-0 truncate text-garuda-pitch', `${homeName} 0%`);
+                const awayPercentage = createElement('span', 'min-w-0 truncate text-right text-amber-700', `0% ${awayName}`);
+                homePercentage.dataset.hypePercent = 'home';
+                awayPercentage.dataset.hypePercent = 'away';
+                percentages.append(homePercentage, awayPercentage);
+
+                const progress = createElement('div', 'flex h-3 overflow-hidden rounded-full bg-gray-100');
+                const homeBar = createElement('div', 'hype-progress-fill h-full bg-garuda-mint');
+                const awayBar = createElement('div', 'hype-progress-fill h-full bg-garuda-gold');
+                progress.dataset.hypeProgress = '';
+                progress.setAttribute('role', 'meter');
+                progress.setAttribute('aria-valuemin', '0');
+                progress.setAttribute('aria-valuemax', '100');
+                progress.setAttribute('aria-valuenow', '0');
+                homeBar.dataset.hypeBar = 'home';
+                awayBar.dataset.hypeBar = 'away';
+                progress.append(homeBar, awayBar);
+
+                const buttons = createElement('div', 'mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2');
+                buttons.append(
+                    createHypeButton(match, 'home', homeName, Number(match.hype_home_count) || 0),
+                    createHypeButton(match, 'away', awayName, Number(match.hype_away_count) || 0),
+                );
+
+                const status = createElement('p', 'mt-2 min-h-4 text-center text-xs text-gray-500');
+                status.dataset.hypeStatus = '';
+                status.setAttribute('role', 'status');
+                status.setAttribute('aria-live', 'polite');
+                section.append(heading, percentages, progress, buttons, status);
+
+                return section;
+            }
+
+            function updateMatchCard(card, match) {
+                const status = matchStatusPresentation(match.status_match);
+                card.dataset.status = match.status_match;
+                card.querySelector('[data-match-status]').className = status.className;
+                card.querySelector('[data-match-status]').textContent = status.label;
+                card.querySelector('[data-match-score]').textContent = `${match.skor_home ?? 0} : ${match.skor_away ?? 0}`;
+                card.querySelector('[data-team-name="home"]').textContent = match.home_team?.nama_tim || 'Tim Home';
+                card.querySelector('[data-team-school="home"]').textContent = match.home_team?.asal_sekolah || '';
+                card.querySelector('[data-team-name="away"]').textContent = match.away_team?.nama_tim || 'Tim Away';
+                card.querySelector('[data-team-school="away"]').textContent = match.away_team?.asal_sekolah || '';
+                updateHypeDisplay(card, match.hype_home_count, match.hype_away_count);
+            }
+
+            function findMatchCard(matchId) {
+                return Array.from(container.querySelectorAll('article[data-match-id]'))
+                    .find((card) => card.dataset.matchId === String(matchId));
+            }
+
+            async function voteHype(matchId, teamSide) {
+                const card = findMatchCard(matchId);
+                if (!card || card.dataset.hypePending === 'true') {
+                    return;
+                }
+
+                const status = card.querySelector('[data-hype-status]');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (!csrfToken) {
+                    status.textContent = 'Token keamanan tidak tersedia. Muat ulang halaman lalu coba lagi.';
+                    console.error('Token CSRF untuk vote hype tidak ditemukan.');
+                    return;
+                }
+
+                card.dataset.hypePending = 'true';
+                card.setAttribute('aria-busy', 'true');
+                card.querySelectorAll('button[data-hype-side]').forEach((button) => {
+                    button.disabled = true;
+                });
+                status.textContent = 'Mengirim dukungan...';
+
+                try {
+                    const response = await fetch(`{{ url('/api/matches') }}/${encodeURIComponent(matchId)}/hype`, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ team_side: teamSide }),
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.message || `Permintaan gagal (${response.status})`);
+                    }
+                    if (!result.success || !result.data) {
+                        throw new Error('Respons vote hype tidak valid.');
+                    }
+
+                    const currentCard = findMatchCard(matchId);
+                    if (currentCard) {
+                        updateHypeDisplay(
+                            currentCard,
+                            result.data.hype_home_count,
+                            result.data.hype_away_count,
+                        );
+                        currentCard.querySelector('[data-hype-status]').textContent = 'Dukungan terkirim! 🔥';
+
+                        const votedButton = currentCard.querySelector(`button[data-hype-side="${teamSide}"]`);
+                        votedButton?.classList.remove('is-cheering');
+                        if (votedButton) {
+                            void votedButton.offsetWidth;
+                            votedButton.classList.add('is-cheering');
+                            window.setTimeout(() => votedButton.classList.remove('is-cheering'), 600);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Gagal mengirim dukungan suporter:', error);
+                    const currentCard = findMatchCard(matchId);
+                    if (currentCard) {
+                        currentCard.querySelector('[data-hype-status]').textContent = 'Dukungan gagal dikirim. Coba lagi.';
+                    }
+                } finally {
+                    const currentCard = findMatchCard(matchId);
+                    if (currentCard) {
+                        delete currentCard.dataset.hypePending;
+                        currentCard.setAttribute('aria-busy', 'false');
+                        currentCard.querySelectorAll('button[data-hype-side]').forEach((button) => {
+                            button.disabled = false;
+                        });
+                    }
+                }
+            }
+
             function createMatchCard(match) {
                 const card = createElement('article', 'rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300');
+                card.dataset.matchId = String(match.id);
                 card.dataset.status = match.status_match;
 
                 const top = createElement('div', 'mb-4 flex items-center justify-between gap-3 text-xs text-gray-500');
                 top.append(createElement('span', 'rounded-md bg-gray-100 px-3 py-1 text-gray-700', match.lapangan || 'Garuda Arena'));
 
-                let badgeClass = 'rounded-full bg-amber-100 px-3 py-1 font-semibold uppercase tracking-wide text-amber-800';
-                let badgeText = 'AKAN DATANG';
-                if (match.status_match === 'live') {
-                    badgeClass = 'rounded-full bg-red-100 px-3 py-1 font-semibold uppercase tracking-wide text-red-800';
-                    badgeText = 'LIVE';
-                } else if (match.status_match === 'finished') {
-                    badgeClass = 'rounded-full bg-emerald-100 px-3 py-1 font-semibold uppercase tracking-wide text-emerald-800';
-                    badgeText = 'SELESAI';
-                }
-                top.append(createElement('span', badgeClass, badgeText));
+                const status = matchStatusPresentation(match.status_match);
+                const statusBadge = createElement('span', status.className, status.label);
+                statusBadge.dataset.matchStatus = '';
+                top.append(statusBadge);
 
                 const teams = createElement('div', 'my-5 grid grid-cols-9 items-center gap-2');
                 const score = createElement('div', 'col-span-1 rounded-lg bg-garuda-obsidian px-1 py-2 text-center font-display text-2xl text-garuda-gold sm:text-3xl', `${match.skor_home ?? 0} : ${match.skor_away ?? 0}`);
+                score.dataset.matchScore = '';
                 teams.append(
-                    createTeamSummary(match.home_team, 'Tim Home', 'sm:text-right'),
+                    createTeamSummary(match.home_team, 'Tim Home', 'sm:text-right', 'home'),
                     score,
-                    createTeamSummary(match.away_team, 'Tim Away', 'sm:text-left'),
+                    createTeamSummary(match.away_team, 'Tim Away', 'sm:text-left', 'away'),
                 );
 
                 const details = createElement('div', 'flex items-center justify-between gap-3 border-t border-gray-100 pt-4 text-xs text-gray-500');
@@ -87,9 +302,22 @@
                 time.append(createElement('strong', 'font-semibold text-garuda-obsidian', match.waktu_tanding || '-'));
                 details.append(round, time);
 
-                card.append(top, teams, details);
+                card.append(top, teams, details, createHypeSection(match));
+                updateHypeDisplay(card, match.hype_home_count, match.hype_away_count);
                 return card;
             }
+
+            container.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) {
+                    return;
+                }
+
+                const button = event.target.closest('button[data-hype-side]');
+                const card = button?.closest('article[data-match-id]');
+                if (button && card) {
+                    voteHype(card.dataset.matchId, button.dataset.hypeSide);
+                }
+            });
 
             function showMessage(message) {
                 const emptyState = createElement('div', 'col-span-full rounded-2xl border border-gray-200 bg-white py-16 text-center shadow-sm');
@@ -120,7 +348,20 @@
                     if (result.data.length === 0) {
                         showMessage('Belum ada jadwal pertandingan yang tersedia saat ini.');
                     } else {
-                        container.replaceChildren(...result.data.map(createMatchCard));
+                        const existingCards = new Map(
+                            Array.from(container.querySelectorAll('article[data-match-id]'))
+                                .map((card) => [card.dataset.matchId, card]),
+                        );
+                        const cards = result.data.map((match) => {
+                            const existingCard = existingCards.get(String(match.id));
+                            if (!existingCard) {
+                                return createMatchCard(match);
+                            }
+
+                            updateMatchCard(existingCard, match);
+                            return existingCard;
+                        });
+                        container.replaceChildren(...cards);
                     }
 
                     hasLoadedData = true;

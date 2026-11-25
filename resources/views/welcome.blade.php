@@ -44,9 +44,9 @@
             </div>
 
             <!-- Hero Main Grid -->
-            <div class="relative z-10 grid grid-cols-1 items-end gap-6 px-6 pt-10 sm:px-10 sm:pt-14 lg:min-h-[540px] lg:grid-cols-12 lg:px-14 lg:pt-14 lg:pb-0">
+            <div class="relative z-10 grid grid-cols-1 items-end gap-6 px-6 pt-10 pb-[300px] sm:px-10 sm:pt-14 sm:pb-[360px] lg:min-h-[540px] lg:grid-cols-12 lg:px-14 lg:pt-14 lg:pb-0">
                 <!-- Left Column: Copywriting & Actions -->
-                <div class="space-y-6 pb-6 text-center lg:col-span-7 lg:pb-14 lg:text-left">
+                <div class="relative z-10 space-y-6 pb-6 text-center lg:col-span-7 lg:pb-14 lg:text-left">
                     <!-- Top Pill Badge (ITB-style Date & Category) -->
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 backdrop-blur-md">
                         <span class="text-sm">📅</span>
@@ -119,11 +119,11 @@
                 </div>
 
                 <!-- Right Column: Mascot Gatam (Flushed to bottom edge, ITB Open House style) -->
-                <div class="relative flex items-end justify-center self-end pt-4 lg:col-span-5 lg:h-full lg:justify-end lg:pt-0">
+                <div class="pointer-events-none absolute -bottom-4 -right-6 z-0 flex h-[300px] w-full items-end justify-end sm:h-[360px] sm:w-[92%] lg:top-0 lg:-right-14 lg:-bottom-4 lg:h-auto lg:w-[62%]">
                     <img
                         src="{{ asset('images/mascot-gatam.png') }}"
                         alt="Maskot Resmi Gatam SMEAN Cup SMKN 1 Garut"
-                        class="relative z-10 max-h-[380px] w-auto object-contain object-bottom drop-shadow-[0_20px_25px_rgba(0,0,0,0.35)] sm:max-h-[460px] lg:max-h-[510px] xl:max-h-[540px]"
+                        class="animate-float relative z-10 max-h-[300px] w-auto object-contain object-bottom drop-shadow-[0_20px_25px_rgba(0,0,0,0.35)] sm:max-h-[360px] lg:max-h-[480px] xl:max-h-[520px]"
                     >
                 </div>
             </div>

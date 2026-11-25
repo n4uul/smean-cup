@@ -164,6 +164,48 @@ class TeamVerificationTest extends TestCase
         Storage::disk('public')->assertMissing($berkasPath);
     }
 
+    public function test_deleting_one_team_keeps_files_shared_with_other_teams(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->save();
+        $participant = User::factory()->create();
+        $logoPath = 'logos/shared-school-logo.png';
+        $documentPath = 'berkas/shared-school-requirements.pdf';
+        Storage::disk('public')->put($logoPath, 'shared logo');
+        Storage::disk('public')->put($documentPath, 'shared requirements');
+
+        $firstTeam = Team::create([
+            'user_id' => $participant->id,
+            'nama_tim' => 'Garut United A',
+            'asal_sekolah' => 'SMA Garut',
+            'nama_pelatih' => 'Pelatih',
+            'no_wa' => '08123456789',
+            'logo_tim' => $logoPath,
+            'berkas_syarat' => $documentPath,
+            'status_verifikasi' => 'pending',
+        ]);
+        $secondTeam = Team::create([
+            'user_id' => $participant->id,
+            'nama_tim' => 'Garut United B',
+            'asal_sekolah' => 'SMA Garut',
+            'nama_pelatih' => 'Pelatih',
+            'no_wa' => '08123456789',
+            'logo_tim' => $logoPath,
+            'berkas_syarat' => $documentPath,
+            'status_verifikasi' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.teams.destroy', $firstTeam))
+            ->assertRedirect(route('admin.teams.index'));
+
+        $this->assertDatabaseHas('teams', ['id' => $secondTeam->id]);
+        Storage::disk('public')->assertExists($logoPath);
+        Storage::disk('public')->assertExists($documentPath);
+    }
+
     public function test_non_admin_cannot_delete_a_team(): void
     {
         $participant = User::factory()->create();

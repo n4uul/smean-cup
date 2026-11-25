@@ -44,6 +44,8 @@ class LiveScoreTest extends TestCase
             ->assertSee('Jadwal & Live Score')
             ->assertSee('matches-container')
             ->assertSee('/api/live-scores')
+            ->assertSee('voteHype')
+            ->assertSee('X-CSRF-TOKEN')
             ->assertSee('Aktif (5s)');
     }
 

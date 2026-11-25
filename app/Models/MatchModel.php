@@ -11,6 +11,14 @@ class MatchModel extends Model
 
     protected $guarded = ['id'];
 
+    protected function casts(): array
+    {
+        return [
+            'hype_home_count' => 'integer',
+            'hype_away_count' => 'integer',
+        ];
+    }
+
     public function homeTeam(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'team_home_id');

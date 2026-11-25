@@ -13,7 +13,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="flex min-h-screen flex-col bg-[#F8F9FA] font-sans text-garuda-obsidian antialiased selection:bg-garuda-mint selection:text-garuda-obsidian">
+<body class="blueprint-grid-background flex min-h-screen flex-col font-sans text-garuda-obsidian antialiased selection:bg-garuda-mint selection:text-garuda-obsidian">
+    <canvas id="blueprint-grid-canvas" class="blueprint-grid-canvas" aria-hidden="true"></canvas>
+
     <nav x-data="{ open: false }" class="sticky top-0 z-50 border-b border-gray-200 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-20 items-center justify-between">

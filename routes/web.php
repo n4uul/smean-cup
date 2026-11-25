@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MatchController;
 use App\Http\Controllers\Admin\TeamVerificationController;
+use App\Http\Controllers\Api\HypeVoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\TeamController;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/jadwal', [PublicController::class, 'schedule'])->name('public.schedule');
+Route::post('/api/matches/{match}/hype', [HypeVoteController::class, 'store'])->name('api.matches.hype');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [TeamController::class, 'index'])->name('dashboard');
