@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
-        <section class="hero-mesh-background relative isolate overflow-hidden rounded-[2.5rem] border border-emerald-500/30 shadow-2xl shadow-emerald-950/20">
+        <section class="hero-mesh-background relative isolate overflow-hidden rounded-[2.5rem] border border-emerald-400/25 shadow-2xl shadow-emerald-950/60">
             <!-- Decorative geometric background pattern (ITB-style soft motifs) -->
             <div class="pointer-events-none absolute inset-0 z-0 opacity-15" aria-hidden="true">
                 <svg class="h-full w-full" viewBox="0 0 1200 600" fill="none" preserveAspectRatio="none">
@@ -44,29 +44,29 @@
             </div>
 
             <!-- Hero Main Grid -->
-            <div class="relative z-10 grid grid-cols-1 items-end gap-6 px-6 pt-10 pb-[300px] sm:px-10 sm:pt-14 sm:pb-[360px] lg:min-h-[540px] lg:grid-cols-12 lg:px-14 lg:pt-14 lg:pb-0">
+            <div class="relative z-10 grid grid-cols-1 items-end gap-6 px-6 pt-10 pb-8 sm:px-10 sm:pt-14 sm:pb-[190px] md:pb-[210px] lg:min-h-[540px] lg:grid-cols-12 lg:px-14 lg:pt-14 lg:pb-0">
                 <!-- Left Column: Copywriting & Actions -->
-                <div class="relative z-10 space-y-6 pb-6 text-center lg:col-span-7 lg:pb-14 lg:text-left">
+                <div class="relative z-10 space-y-6 pb-4 text-center lg:col-span-7 lg:pb-14 lg:text-left">
                     <!-- Top Pill Badge (ITB-style Date & Category) -->
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 backdrop-blur-md">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-white/10 px-4 py-2 backdrop-blur-md">
                         <span class="text-sm">📅</span>
-                        <span class="font-heading text-xs font-bold uppercase tracking-wider text-garuda-gold">
+                        <span class="font-heading text-xs font-bold uppercase tracking-wider text-[#FACC15]">
                             2026 Series · SMP/MTs Sederajat Se-Jawa Barat
                         </span>
                     </div>
 
                     <!-- Main Bold Headline -->
-                    <h1 class="font-display text-5xl uppercase leading-[0.92] tracking-wide text-garuda-white sm:text-6xl md:text-7xl">
+                    <h1 class="font-display text-5xl uppercase leading-[0.92] tracking-wide text-white sm:text-6xl md:text-7xl">
                         Buktikan Nyali,<br>
-                        <span class="text-garuda-gold">Rebut Tahta Juara!</span>
+                        <span class="text-[#FACC15] drop-shadow-[0_0_24px_rgba(250,204,21,0.35)]">Rebut Tahta Juara!</span>
                     </h1>
 
                     <!-- Subtitle / Context -->
                     <div class="space-y-1">
-                        <p class="font-heading text-sm font-semibold text-garuda-mint sm:text-base">
+                        <p class="font-heading text-sm font-semibold text-emerald-300 sm:text-base">
                             SMEAN Cup 2026 Futsal Championship
                         </p>
-                        <p class="mx-auto max-w-xl text-sm leading-relaxed text-emerald-50/90 sm:text-base lg:mx-0">
+                        <p class="mx-auto max-w-xl text-sm leading-relaxed text-white/90 sm:text-base lg:mx-0">
                             Garuda Arena — Sasana Olahraga SMKN 1 Garut, Jawa Barat.<br class="hidden sm:inline">
                             Ajang futsal paling bergengsi untuk talenta muda terbaik.
                         </p>
@@ -77,7 +77,7 @@
                         @guest
                             <a
                                 href="{{ route('register') }}"
-                                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-garuda-gold px-8 py-3.5 font-heading text-xs font-extrabold uppercase tracking-wider text-garuda-obsidian shadow-lg shadow-amber-500/20 transition-all hover:bg-yellow-300 hover:shadow-xl sm:w-auto"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#FACC15] px-8 py-3.5 font-heading text-xs font-extrabold uppercase tracking-wider text-[#061b0d] shadow-lg shadow-[#EAB308]/30 transition-all hover:bg-yellow-300 hover:shadow-xl hover:shadow-[#FACC15]/40 sm:w-auto"
                             >
                                 <span>Daftar Tim Sekarang</span>
                                 <span class="text-base font-bold leading-none">↗</span>
@@ -85,7 +85,7 @@
                         @else
                             <a
                                 href="{{ route('dashboard') }}"
-                                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-garuda-gold px-8 py-3.5 font-heading text-xs font-extrabold uppercase tracking-wider text-garuda-obsidian shadow-lg shadow-amber-500/20 transition-all hover:bg-yellow-300 hover:shadow-xl sm:w-auto"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#FACC15] px-8 py-3.5 font-heading text-xs font-extrabold uppercase tracking-wider text-[#061b0d] shadow-lg shadow-[#EAB308]/30 transition-all hover:bg-yellow-300 hover:shadow-xl hover:shadow-[#FACC15]/40 sm:w-auto"
                             >
                                 <span>Dashboard Tim</span>
                                 <span class="text-base font-bold leading-none">↗</span>
@@ -94,7 +94,7 @@
 
                         <a
                             href="{{ route('public.schedule') }}"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/60 bg-white/10 px-8 py-3.5 font-heading text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:bg-white hover:text-garuda-obsidian sm:w-auto"
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/50 bg-white/10 px-8 py-3.5 font-heading text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all hover:bg-white hover:text-[#061b0d] sm:w-auto"
                         >
                             <span>Jadwal &amp; Live Score</span>
                             <span class="text-base font-bold leading-none">↗</span>
@@ -102,28 +102,28 @@
                     </div>
 
                     <!-- Quick Metrics Counter (Subtle Glassmorphic Bar) -->
-                    <div class="mx-auto grid max-w-lg grid-cols-3 gap-4 border-t border-white/15 pt-6 text-center sm:text-left lg:mx-0">
+                    <div class="mx-auto grid max-w-lg grid-cols-3 gap-4 border-t border-emerald-300/20 pt-6 text-center [text-shadow:0_2px_10px_rgba(0,0,0,0.55)] sm:text-left lg:mx-0 lg:[text-shadow:none]">
                         <div>
-                            <span class="block font-display text-3xl text-garuda-gold">{{ $teams->count() }}</span>
+                            <span class="block font-display text-3xl text-[#FACC15] drop-shadow-[0_0_16px_rgba(250,204,21,0.28)]">{{ $teams->count() }}</span>
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100/80">Tim Terdaftar</span>
                         </div>
                         <div>
-                            <span class="block font-display text-3xl text-garuda-white">64+ TIM</span>
+                            <span class="block font-display text-3xl text-white">64+ TIM</span>
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100/80">Target Kuota</span>
                         </div>
                         <div>
-                            <span class="block font-display text-3xl text-garuda-white">GARUDA ARENA</span>
+                            <span class="block font-display text-3xl text-white">GARUDA ARENA</span>
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100/80">Venue SMKN 1</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Mascot Gatam (Flushed to bottom edge, ITB Open House style) -->
-                <div class="pointer-events-none absolute -bottom-4 -right-6 z-0 flex h-[300px] w-full items-end justify-end sm:h-[360px] sm:w-[92%] lg:top-0 lg:-right-14 lg:-bottom-4 lg:h-auto lg:w-[62%]">
+                <!-- Right Column: Mascot Gatam (Crop & bleed baseline anchor, ITB Open House style) -->
+                <div class="pointer-events-none absolute -bottom-12 -right-4 z-0 flex items-end justify-end sm:-bottom-16 sm:-right-4 md:-bottom-20 md:-right-4 lg:-bottom-28 lg:-right-16 xl:-bottom-36 xl:-right-10">
                     <img
                         src="{{ asset('images/mascot-gatam.png') }}"
                         alt="Maskot Resmi Gatam SMEAN Cup SMKN 1 Garut"
-                        class="animate-float relative z-10 max-h-[300px] w-auto object-contain object-bottom drop-shadow-[0_20px_25px_rgba(0,0,0,0.35)] sm:max-h-[360px] lg:max-h-[480px] xl:max-h-[520px]"
+                        class="relative z-10 h-[210px] w-auto max-w-none object-contain object-bottom drop-shadow-[0_20px_25px_rgba(0,0,0,0.35)] sm:h-[280px] md:h-[320px] lg:h-[520px] xl:h-[600px]"
                     >
                 </div>
             </div>
@@ -226,7 +226,11 @@
                 <p id="score-update-status" class="mt-3 min-h-5 text-center text-xs text-gray-500" role="status" aria-live="polite"></p>
             </section>
 
-            <x-top-scorer-board :top-scorers="$topScorers" id="top-scorer" />
+            <x-top-scorer-board
+                :top-scorers-putra="$topScorersPutra"
+                :top-scorers-putri="$topScorersPutri"
+                id="top-scorer"
+            />
 
             <section
                 x-data="{ category: 'all', counts: @js($teamCategoryCounts) }"

@@ -63,11 +63,13 @@ class TopScorerLeaderboardTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Belum Ada Gol Tercatat');
+            ->assertSee('Belum ada gol tercatat untuk kategori Putra')
+            ->assertSee('Belum ada gol tercatat untuk kategori Putri');
 
         $this->get(route('public.schedule'))
             ->assertOk()
-            ->assertSee('Belum Ada Gol Tercatat');
+            ->assertSee('Belum ada gol tercatat untuk kategori Putra')
+            ->assertSee('Belum ada gol tercatat untuk kategori Putri');
     }
 
     private function createTeam(string $name, string $school, string $status): Team

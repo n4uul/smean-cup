@@ -15,15 +15,17 @@ class PublicController extends Controller
         $matches = MatchModel::with(['homeTeam', 'awayTeam'])
             ->orderBy('waktu_tanding')
             ->get();
-        $topScorers = Player::topScorers(10)->get();
+        $topScorersPutra = Player::topScorers(10, Team::KATEGORI_PUTRA)->get();
+        $topScorersPutri = Player::topScorers(10, Team::KATEGORI_PUTRI)->get();
 
-        return view('welcome', compact('teams', 'matches', 'topScorers'));
+        return view('welcome', compact('teams', 'matches', 'topScorersPutra', 'topScorersPutri'));
     }
 
     public function schedule(): View
     {
-        $topScorers = Player::topScorers(10)->get();
+        $topScorersPutra = Player::topScorers(10, Team::KATEGORI_PUTRA)->get();
+        $topScorersPutri = Player::topScorers(10, Team::KATEGORI_PUTRI)->get();
 
-        return view('public.schedule', compact('topScorers'));
+        return view('public.schedule', compact('topScorersPutra', 'topScorersPutri'));
     }
 }

@@ -41,12 +41,17 @@ class Player extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function scopeTopScorers(Builder $query, int $limit = 10): Builder
+    public function scopeTopScorers(Builder $query, int $limit = 10, ?string $kategori = null): Builder
     {
         return $query
             ->with('team:id,nama_tim,asal_sekolah,kategori,logo_tim')
             ->where('jumlah_gol', '>', 0)
-            ->whereHas('team', fn (Builder $teamQuery) => $teamQuery->where('status_verifikasi', 'approved'))
+            ->whereHas('team', function (Builder $teamQuery) use ($kategori) {
+                $teamQuery->where('status_verifikasi', 'approved');
+                if ($kategori !== null) {
+                    $teamQuery->where('kategori', $kategori);
+                }
+            })
             ->orderByDesc('jumlah_gol')
             ->orderBy('nama_lengkap')
             ->limit($limit);

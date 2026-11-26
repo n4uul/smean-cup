@@ -88,7 +88,10 @@
         </div>
 
         <div x-show="activeTab === 'top-scorer'" x-cloak>
-            <x-top-scorer-board :top-scorers="$topScorers" />
+            <x-top-scorer-board
+                :top-scorers-putra="$topScorersPutra"
+                :top-scorers-putri="$topScorersPutri"
+            />
         </div>
     </section>
 @endsection
