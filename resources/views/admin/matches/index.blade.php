@@ -144,7 +144,7 @@
                 </div>
                 <div>
                     <label for="lapangan" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Lapangan</label>
-                    <input id="lapangan" type="text" name="lapangan" value="{{ old('lapangan') }}" maxlength="255" placeholder="Contoh: Garuda Arena" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
+                    <input id="lapangan" type="text" name="lapangan" value="{{ old('lapangan') }}" maxlength="255" placeholder="Contoh: Dome Garuda Hitam" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
                     @error('lapangan') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>

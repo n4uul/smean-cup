@@ -67,7 +67,7 @@
                             SMEAN Cup 2026 Futsal Championship
                         </p>
                         <p class="mx-auto max-w-xl text-sm leading-relaxed text-white/90 sm:text-base lg:mx-0">
-                            Garuda Arena — Sasana Olahraga SMKN 1 Garut, Jawa Barat.<br class="hidden sm:inline">
+                            Dome Garuda Hitam — Sasana Olahraga SMKN 1 Garut, Jawa Barat.<br class="hidden sm:inline">
                             Ajang futsal paling bergengsi untuk talenta muda terbaik.
                         </p>
                     </div>
@@ -112,7 +112,7 @@
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100/80">Target Kuota</span>
                         </div>
                         <div>
-                            <span class="block font-display text-3xl text-white">GARUDA ARENA</span>
+                            <span class="block font-display text-3xl text-white">DOME GARUDA HITAM</span>
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100/80">Venue SMKN 1</span>
                         </div>
                     </div>

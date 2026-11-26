@@ -425,7 +425,7 @@
 
                 const top = createElement('div', 'mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500');
                 const leftMeta = createElement('div', 'flex flex-wrap items-center gap-2');
-                leftMeta.append(createElement('span', 'rounded-md bg-gray-100 px-3 py-1 text-gray-700', match.lapangan || 'Garuda Arena'));
+                leftMeta.append(createElement('span', 'rounded-md bg-gray-100 px-3 py-1 text-gray-700', match.lapangan || 'Dome Garuda Hitam'));
                 const catBadge = createElement('span', catPres.className, catPres.label);
                 catBadge.dataset.matchCategory = '';
                 leftMeta.append(catBadge);
