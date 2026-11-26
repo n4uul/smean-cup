@@ -55,6 +55,7 @@ class TeamRegistrationQuotaTest extends TestCase
         $this->actingAs($user)
             ->post(route('teams.store'), [
                 'nama_tim' => 'SMPN 1 Garut',
+                'kategori' => 'putra',
                 'jumlah_tim' => 3,
                 'asal_sekolah' => 'SMPN 1 Garut',
                 'nama_pelatih' => 'Official Sekolah',
@@ -99,6 +100,7 @@ class TeamRegistrationQuotaTest extends TestCase
             ->from(route('dashboard'))
             ->post(route('teams.store'), [
                 'nama_tim' => 'Garut United',
+                'kategori' => 'putra',
                 'jumlah_tim' => 2,
                 'asal_sekolah' => 'MTsN 1 Garut',
                 'nama_pelatih' => 'Pelatih',
@@ -116,6 +118,7 @@ class TeamRegistrationQuotaTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->post(route('teams.store'), [
             'nama_tim' => 'Garut United',
+            'kategori' => 'putra',
             'jumlah_tim' => 2,
             'asal_sekolah' => 'SMA Garut',
             'nama_pelatih' => 'Pelatih',
@@ -126,6 +129,7 @@ class TeamRegistrationQuotaTest extends TestCase
             ->from(route('dashboard'))
             ->post(route('teams.store'), [
                 'nama_tim' => 'Garut United',
+                'kategori' => 'putra',
                 'jumlah_tim' => 1,
                 'asal_sekolah' => 'SMA Garut',
                 'nama_pelatih' => 'Pelatih',
@@ -170,6 +174,7 @@ class TeamRegistrationQuotaTest extends TestCase
             ->followingRedirects()
             ->post(route('teams.store'), [
                 'nama_tim' => 'New Team',
+                'kategori' => 'putra',
                 'jumlah_tim' => 1,
                 'asal_sekolah' => '  mTsN 1 gARUT ',
                 'nama_pelatih' => 'Pelatih',
@@ -184,12 +189,39 @@ class TeamRegistrationQuotaTest extends TestCase
         $this->assertDatabaseMissing('teams', ['user_id' => $user->id]);
     }
 
-    private function registerTeam(string $name, string $school, int $count = 1)
+    public function test_registration_stores_selected_kategori_for_all_registered_teams(): void
+    {
+        $this->registerTeam('Garut Putri', 'SMPN 2 Garut', 2, 'putri')
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('teams', [
+            'nama_tim' => 'Garut Putri A',
+            'kategori' => 'putri',
+        ]);
+        $this->assertDatabaseHas('teams', [
+            'nama_tim' => 'Garut Putri B',
+            'kategori' => 'putri',
+        ]);
+    }
+
+    public function test_registration_rejects_invalid_kategori(): void
+    {
+        $this->registerTeam('Invalid Team', 'SMPN 3 Garut', 1, 'campuran')
+            ->assertSessionHasErrors('kategori');
+
+        $this->assertDatabaseMissing('teams', [
+            'nama_tim' => 'Invalid Team',
+        ]);
+    }
+
+    private function registerTeam(string $name, string $school, int $count = 1, string $kategori = 'putra')
     {
         $user = User::factory()->create();
 
         return $this->actingAs($user)->post(route('teams.store'), [
             'nama_tim' => $name,
+            'kategori' => $kategori,
             'jumlah_tim' => $count,
             'asal_sekolah' => $school,
             'nama_pelatih' => 'Pelatih',

@@ -3,27 +3,92 @@
 @section('title', 'Jadwal & Live Score — SMEAN Cup 2026')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <div class="mb-8 flex flex-col gap-5 border-b border-gray-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <section x-data="{ activeTab: 'matches', category: 'all' }" class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <div class="mb-6 flex flex-col gap-5 border-b border-gray-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="font-heading text-xs font-bold uppercase tracking-widest text-garuda-pitch">Real-Time Match Center</p>
                 <h1 class="mt-2 font-display text-4xl uppercase tracking-wide text-garuda-obsidian sm:text-5xl">
                     Jadwal &amp; <span class="text-garuda-gold">Live Score</span>
                 </h1>
-                <p class="mt-2 text-sm text-gray-600">Pantau jadwal pertandingan dan skor terbaru SMEAN Cup.</p>
+                <p class="mt-2 text-sm text-gray-600">Pantau jadwal pertandingan, skor terbaru, dan papan Top Scorer SMEAN Cup.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-gray-500">Pembaruan otomatis</span>
-                <span id="status-indicator" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-800" role="status" aria-live="polite">
-                    Aktif (5s)
-                </span>
+            <div x-show="activeTab === 'matches'" class="flex flex-wrap items-center justify-between gap-4 sm:justify-end">
+                <div class="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm" role="group" aria-label="Filter kategori pertandingan">
+                    <button
+                        type="button"
+                        @click="category = 'all'; window.dispatchEvent(new CustomEvent('schedule-category-change', { detail: 'all' }))"
+                        :aria-pressed="(category === 'all').toString()"
+                        :class="category === 'all' ? 'bg-garuda-obsidian text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                        class="rounded-lg px-3.5 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                    >
+                        Semua
+                    </button>
+                    <button
+                        type="button"
+                        @click="category = 'putra'; window.dispatchEvent(new CustomEvent('schedule-category-change', { detail: 'putra' }))"
+                        :aria-pressed="(category === 'putra').toString()"
+                        :class="category === 'putra' ? 'bg-sky-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                        class="rounded-lg px-3.5 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                    >
+                        Putra
+                    </button>
+                    <button
+                        type="button"
+                        @click="category = 'putri'; window.dispatchEvent(new CustomEvent('schedule-category-change', { detail: 'putri' }))"
+                        :aria-pressed="(category === 'putri').toString()"
+                        :class="category === 'putri' ? 'bg-rose-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                        class="rounded-lg px-3.5 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                    >
+                        Putri
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500">Pembaruan otomatis</span>
+                    <span id="status-indicator" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-800" role="status" aria-live="polite">
+                        Aktif (5s)
+                    </span>
+                </div>
             </div>
         </div>
 
-        <div id="matches-container" class="grid grid-cols-1 gap-5 md:grid-cols-2" aria-busy="true">
-            <div class="col-span-full rounded-2xl border border-gray-200 bg-white py-16 text-center text-sm text-gray-500 shadow-sm">
-                Memuat data pertandingan terbaru...
+        <div class="mb-8 inline-flex rounded-xl border border-gray-200 bg-white p-1.5 shadow-sm" role="tablist" aria-label="Navigasi Jadwal dan Statistik">
+            <button
+                type="button"
+                role="tab"
+                @click="activeTab = 'matches'"
+                :aria-selected="(activeTab === 'matches').toString()"
+                :class="activeTab === 'matches' ? 'bg-garuda-obsidian text-garuda-gold shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                class="rounded-lg px-4 py-2 font-heading text-xs font-bold uppercase tracking-wider transition"
+            >
+                Jadwal &amp; Live Score
+            </button>
+            <button
+                type="button"
+                role="tab"
+                @click="activeTab = 'top-scorer'"
+                :aria-selected="(activeTab === 'top-scorer').toString()"
+                :class="activeTab === 'top-scorer' ? 'bg-garuda-obsidian text-garuda-gold shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                class="rounded-lg px-4 py-2 font-heading text-xs font-bold uppercase tracking-wider transition"
+            >
+                Statistik &amp; Top Scorer
+            </button>
+        </div>
+
+        <div x-show="activeTab === 'matches'">
+            <div id="matches-container" class="grid grid-cols-1 gap-5 md:grid-cols-2" aria-busy="true">
+                <div class="col-span-full rounded-2xl border border-gray-200 bg-white py-16 text-center text-sm text-gray-500 shadow-sm">
+                    Memuat data pertandingan terbaru...
+                </div>
             </div>
+
+            <div id="empty-filter-state" class="hidden rounded-2xl border border-gray-200 bg-white py-16 text-center text-sm text-gray-500 shadow-sm">
+                Belum ada jadwal pertandingan untuk kategori ini.
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'top-scorer'" x-cloak>
+            <x-top-scorer-board :top-scorers="$topScorers" />
         </div>
     </section>
 @endsection
@@ -32,9 +97,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('matches-container');
+            const emptyFilterState = document.getElementById('empty-filter-state');
             const statusIndicator = document.getElementById('status-indicator');
             let hasLoadedData = false;
             let requestPending = false;
+            let activeCategory = 'all';
 
             function createElement(tag, className, text) {
                 const element = document.createElement(tag);
@@ -44,6 +111,62 @@
                 }
                 return element;
             }
+
+            function categoryPresentation(kategori) {
+                if (kategori === 'putri') {
+                    return {
+                        className: 'inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wider text-rose-700',
+                        label: 'Putri',
+                    };
+                }
+
+                return {
+                    className: 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wider text-sky-700',
+                    label: 'Putra',
+                };
+            }
+
+            function formatMatchTime(value) {
+                if (!value) {
+                    return '-';
+                }
+                const normalized = String(value).replace(' ', 'T');
+                const date = new Date(normalized);
+                if (Number.isNaN(date.getTime())) {
+                    return String(value);
+                }
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day} ${month} ${year} · ${hours}:${minutes} WIB`;
+            }
+
+            function applyCategoryFilter() {
+                const cards = Array.from(container.querySelectorAll('article[data-match-id]'));
+                if (cards.length === 0) {
+                    emptyFilterState.classList.add('hidden');
+                    return;
+                }
+
+                let visibleCount = 0;
+                for (const card of cards) {
+                    const matchesFilter = activeCategory === 'all' || card.dataset.category === activeCategory;
+                    card.classList.toggle('hidden', !matchesFilter);
+                    if (matchesFilter) {
+                        visibleCount += 1;
+                    }
+                }
+
+                emptyFilterState.classList.toggle('hidden', visibleCount > 0);
+            }
+
+            window.addEventListener('schedule-category-change', (event) => {
+                activeCategory = event.detail || 'all';
+                applyCategoryFilter();
+            });
 
             function matchStatusPresentation(status) {
                 if (status === 'live') {
@@ -182,9 +305,25 @@
 
             function updateMatchCard(card, match) {
                 const status = matchStatusPresentation(match.status_match);
+                const kategori = match.home_team?.kategori || match.away_team?.kategori || 'putra';
+                const catPres = categoryPresentation(kategori);
+
                 card.dataset.status = match.status_match;
+                card.dataset.category = kategori;
                 card.querySelector('[data-match-status]').className = status.className;
                 card.querySelector('[data-match-status]').textContent = status.label;
+
+                const catBadge = card.querySelector('[data-match-category]');
+                if (catBadge) {
+                    catBadge.className = catPres.className;
+                    catBadge.textContent = catPres.label;
+                }
+
+                const timeEl = card.querySelector('[data-match-time]');
+                if (timeEl) {
+                    timeEl.textContent = match.waktu_tanding_formatted || formatMatchTime(match.waktu_tanding);
+                }
+
                 card.querySelector('[data-match-score]').textContent = `${match.skor_home ?? 0} : ${match.skor_away ?? 0}`;
                 card.querySelector('[data-team-name="home"]').textContent = match.home_team?.nama_tim || 'Tim Home';
                 card.querySelector('[data-team-school="home"]').textContent = match.home_team?.asal_sekolah || '';
@@ -274,17 +413,24 @@
             }
 
             function createMatchCard(match) {
+                const kategori = match.home_team?.kategori || match.away_team?.kategori || 'putra';
+                const catPres = categoryPresentation(kategori);
                 const card = createElement('article', 'rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300');
                 card.dataset.matchId = String(match.id);
                 card.dataset.status = match.status_match;
+                card.dataset.category = kategori;
 
-                const top = createElement('div', 'mb-4 flex items-center justify-between gap-3 text-xs text-gray-500');
-                top.append(createElement('span', 'rounded-md bg-gray-100 px-3 py-1 text-gray-700', match.lapangan || 'Garuda Arena'));
+                const top = createElement('div', 'mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500');
+                const leftMeta = createElement('div', 'flex flex-wrap items-center gap-2');
+                leftMeta.append(createElement('span', 'rounded-md bg-gray-100 px-3 py-1 text-gray-700', match.lapangan || 'Garuda Arena'));
+                const catBadge = createElement('span', catPres.className, catPres.label);
+                catBadge.dataset.matchCategory = '';
+                leftMeta.append(catBadge);
 
                 const status = matchStatusPresentation(match.status_match);
                 const statusBadge = createElement('span', status.className, status.label);
                 statusBadge.dataset.matchStatus = '';
-                top.append(statusBadge);
+                top.append(leftMeta, statusBadge);
 
                 const teams = createElement('div', 'my-5 grid grid-cols-9 items-center gap-2');
                 const score = createElement('div', 'col-span-1 rounded-lg bg-garuda-obsidian px-1 py-2 text-center font-display text-2xl text-garuda-gold sm:text-3xl', `${match.skor_home ?? 0} : ${match.skor_away ?? 0}`);
@@ -295,11 +441,13 @@
                     createTeamSummary(match.away_team, 'Tim Away', 'sm:text-left', 'away'),
                 );
 
-                const details = createElement('div', 'flex items-center justify-between gap-3 border-t border-gray-100 pt-4 text-xs text-gray-500');
+                const details = createElement('div', 'flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-xs text-gray-500');
                 const round = createElement('span', '', 'Babak: ');
                 round.append(createElement('strong', 'font-semibold uppercase text-garuda-obsidian', match.babak || 'Grup'));
                 const time = createElement('span', '', 'Waktu: ');
-                time.append(createElement('strong', 'font-semibold text-garuda-obsidian', match.waktu_tanding || '-'));
+                const timeValue = createElement('strong', 'font-semibold text-garuda-obsidian', match.waktu_tanding_formatted || formatMatchTime(match.waktu_tanding));
+                timeValue.dataset.matchTime = '';
+                time.append(timeValue);
                 details.append(round, time);
 
                 card.append(top, teams, details, createHypeSection(match));
@@ -347,6 +495,7 @@
 
                     if (result.data.length === 0) {
                         showMessage('Belum ada jadwal pertandingan yang tersedia saat ini.');
+                        emptyFilterState.classList.add('hidden');
                     } else {
                         const existingCards = new Map(
                             Array.from(container.querySelectorAll('article[data-match-id]'))
@@ -362,6 +511,7 @@
                             return existingCard;
                         });
                         container.replaceChildren(...cards);
+                        applyCategoryFilter();
                     }
 
                     hasLoadedData = true;

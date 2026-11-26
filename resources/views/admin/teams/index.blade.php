@@ -57,6 +57,7 @@
                     <thead>
                         <tr class="border-b border-gray-200 bg-gray-50 font-heading text-xs uppercase text-gray-600">
                             <th scope="col" class="px-4 py-3">Tim &amp; Sekolah</th>
+                            <th scope="col" class="px-4 py-3">Kategori</th>
                             <th scope="col" class="px-4 py-3">Pendaftar</th>
                             <th scope="col" class="px-4 py-3">Pelatih / Kontak</th>
                             <th scope="col" class="px-4 py-3">Berkas</th>
@@ -88,6 +89,9 @@
                                             <span class="text-xs text-gray-500">{{ $team->asal_sekolah }}</span>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <x-category-badge :kategori="$team->kategori ?? 'putra'" />
                                 </td>
                                 <td class="px-4 py-4">
                                     <span class="block font-medium text-garuda-obsidian">{{ $team->user->name }}</span>
@@ -142,7 +146,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-12 text-center text-sm text-gray-500">Belum ada data tim yang masuk.</td>
+                                <td colspan="7" class="px-4 py-12 text-center text-sm text-gray-500">Belum ada data tim yang masuk.</td>
                             </tr>
                         @endforelse
                     </tbody>

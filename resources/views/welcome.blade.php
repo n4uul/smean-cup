@@ -130,22 +130,80 @@
         </section>
 
         <div class="mt-10 space-y-8">
-            <section id="matches" class="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-                <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            @php
+                $matchCategoryCounts = [
+                    'putra' => $matches->filter(fn ($m) => ($m->homeTeam?->kategori ?? 'putra') === 'putra')->count(),
+                    'putri' => $matches->filter(fn ($m) => ($m->homeTeam?->kategori ?? 'putra') === 'putri')->count(),
+                ];
+                $teamCategoryCounts = [
+                    'putra' => $teams->where('kategori', 'putra')->count(),
+                    'putri' => $teams->where('kategori', 'putri')->count(),
+                ];
+            @endphp
+
+            <section
+                id="matches"
+                x-data="{ category: 'all', counts: @js($matchCategoryCounts) }"
+                class="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+            >
+                <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <p class="font-heading text-xs font-semibold uppercase tracking-widest text-garuda-pitch">Match Center</p>
                         <h2 class="mt-1 font-display text-3xl uppercase text-garuda-obsidian sm:text-4xl">Jadwal &amp; Live Score</h2>
                     </div>
-                    <a href="{{ route('public.schedule') }}" class="font-heading text-xs font-bold uppercase tracking-wide text-garuda-pitch hover:underline">
-                        Semua pertandingan
-                    </a>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="inline-flex rounded-xl border border-gray-200 bg-gray-50 p-1" role="group" aria-label="Filter kategori jadwal pertandingan">
+                            <button
+                                type="button"
+                                @click="category = 'all'"
+                                :aria-pressed="(category === 'all').toString()"
+                                :class="category === 'all' ? 'bg-garuda-obsidian text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                                class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                            >
+                                Semua
+                            </button>
+                            <button
+                                type="button"
+                                @click="category = 'putra'"
+                                :aria-pressed="(category === 'putra').toString()"
+                                :class="category === 'putra' ? 'bg-sky-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                                class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                            >
+                                Putra
+                            </button>
+                            <button
+                                type="button"
+                                @click="category = 'putri'"
+                                :aria-pressed="(category === 'putri').toString()"
+                                :class="category === 'putri' ? 'bg-rose-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                                class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                            >
+                                Putri
+                            </button>
+                        </div>
+                        <a href="{{ route('public.schedule') }}" class="font-heading text-xs font-bold uppercase tracking-wide text-garuda-pitch hover:underline">
+                            Semua pertandingan
+                        </a>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2" id="matches-list">
                     @forelse ($matches as $match)
-                        <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" data-match-id="{{ $match->id }}" data-status="{{ $match->status_match }}">
+                        @php
+                            $matchCategory = $match->homeTeam?->kategori ?? 'putra';
+                        @endphp
+                        <article
+                            x-show="category === 'all' || category === '{{ $matchCategory }}'"
+                            class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                            data-match-id="{{ $match->id }}"
+                            data-status="{{ $match->status_match }}"
+                            data-category="{{ $matchCategory }}"
+                        >
                             <div class="mb-4 flex items-center justify-between gap-3">
-                                <span data-match-status class="rounded-full bg-garuda-mint px-3 py-1 text-xs font-bold uppercase text-garuda-obsidian">{{ $match->status_match }}</span>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span data-match-status class="rounded-full bg-garuda-mint px-3 py-1 text-xs font-bold uppercase text-garuda-obsidian">{{ $match->status_match }}</span>
+                                    <x-category-badge :kategori="$matchCategory" />
+                                </div>
                                 <span class="text-right text-xs text-gray-500">{{ $match->babak }} <span aria-hidden="true">·</span> {{ $match->lapangan }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-3 text-center">
@@ -153,23 +211,72 @@
                                 <span data-match-score class="w-2/12 whitespace-nowrap font-display text-2xl text-garuda-pitch">{{ $match->skor_home }} - {{ $match->skor_away }}</span>
                                 <span class="w-5/12 font-heading text-sm font-bold text-garuda-obsidian">{{ $match->awayTeam->nama_tim }}</span>
                             </div>
-                            <p class="mt-4 text-center text-xs text-gray-500">{{ $match->waktu_tanding }}</p>
+                            <p class="mt-4 text-center text-xs text-gray-500">{{ $match->waktu_tanding_formatted }}</p>
                         </article>
                     @empty
                         <p class="col-span-full py-8 text-center text-sm text-gray-500">Jadwal pertandingan akan segera diumumkan.</p>
                     @endforelse
+
+                    @if ($matches->isNotEmpty())
+                        <p x-show="category !== 'all' && counts[category] === 0" x-cloak class="col-span-full py-8 text-center text-sm text-gray-500">
+                            Belum ada jadwal pertandingan untuk kategori <span class="font-semibold capitalize" x-text="category"></span>.
+                        </p>
+                    @endif
                 </div>
                 <p id="score-update-status" class="mt-3 min-h-5 text-center text-xs text-gray-500" role="status" aria-live="polite"></p>
             </section>
 
-            <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-                <div class="mb-6">
-                    <p class="font-heading text-xs font-semibold uppercase tracking-widest text-garuda-pitch">Peserta</p>
-                    <h2 class="mt-1 font-display text-3xl uppercase text-garuda-obsidian sm:text-4xl">Tim Terverifikasi</h2>
+            <x-top-scorer-board :top-scorers="$topScorers" id="top-scorer" />
+
+            <section
+                x-data="{ category: 'all', counts: @js($teamCategoryCounts) }"
+                class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+            >
+                <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                        <p class="font-heading text-xs font-semibold uppercase tracking-widest text-garuda-pitch">Peserta</p>
+                        <h2 class="mt-1 font-display text-3xl uppercase text-garuda-obsidian sm:text-4xl">Tim Terverifikasi</h2>
+                    </div>
+                    <div class="inline-flex self-start rounded-xl border border-gray-200 bg-gray-50 p-1 sm:self-auto" role="group" aria-label="Filter kategori tim terverifikasi">
+                        <button
+                            type="button"
+                            @click="category = 'all'"
+                            :aria-pressed="(category === 'all').toString()"
+                            :class="category === 'all' ? 'bg-garuda-obsidian text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                            class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                        >
+                            Semua
+                        </button>
+                        <button
+                            type="button"
+                            @click="category = 'putra'"
+                            :aria-pressed="(category === 'putra').toString()"
+                            :class="category === 'putra' ? 'bg-sky-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                            class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                        >
+                            Putra
+                        </button>
+                        <button
+                            type="button"
+                            @click="category = 'putri'"
+                            :aria-pressed="(category === 'putri').toString()"
+                            :class="category === 'putri' ? 'bg-rose-600 text-white shadow-sm' : 'text-gray-600 hover:text-garuda-obsidian'"
+                            class="rounded-lg px-3 py-1.5 font-heading text-xs font-bold uppercase tracking-wide transition"
+                        >
+                            Putri
+                        </button>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     @forelse ($teams as $team)
-                        <article class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+                        @php
+                            $teamCategory = $team->kategori ?? 'putra';
+                        @endphp
+                        <article
+                            x-show="category === 'all' || category === '{{ $teamCategory }}'"
+                            data-team-category="{{ $teamCategory }}"
+                            class="rounded-xl border border-gray-200 bg-white p-4 text-center"
+                        >
                             @if ($team->logo_tim)
                                 <img src="{{ asset('storage/'.$team->logo_tim) }}" alt="Logo {{ $team->nama_tim }}" class="mx-auto mb-3 h-16 w-16 rounded-full border border-gray-200 object-cover">
                             @else
@@ -177,10 +284,17 @@
                             @endif
                             <h3 class="font-heading text-sm font-bold text-garuda-obsidian">{{ $team->nama_tim }}</h3>
                             <p class="mt-1 text-xs text-gray-500">{{ $team->asal_sekolah }}</p>
+                            <x-category-badge :kategori="$teamCategory" class="mt-2.5" />
                         </article>
                     @empty
                         <p class="col-span-full py-8 text-center text-sm text-gray-500">Belum ada tim yang disetujui.</p>
                     @endforelse
+
+                    @if ($teams->isNotEmpty())
+                        <p x-show="category !== 'all' && counts[category] === 0" x-cloak class="col-span-full py-8 text-center text-sm text-gray-500">
+                            Belum ada tim terverifikasi pada kategori <span class="font-semibold capitalize" x-text="category"></span>.
+                        </p>
+                    @endif
                 </div>
             </section>
         </div>

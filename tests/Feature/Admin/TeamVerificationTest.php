@@ -63,6 +63,7 @@ class TeamVerificationTest extends TestCase
         $team = Team::create([
             'user_id' => User::factory()->create()->id,
             'nama_tim' => 'Garut United',
+            'kategori' => 'putri',
             'asal_sekolah' => 'SMA Garut',
             'nama_pelatih' => 'Pelatih',
             'no_wa' => '08123456789',
@@ -73,6 +74,7 @@ class TeamVerificationTest extends TestCase
             ->get(route('admin.teams.index'))
             ->assertOk()
             ->assertSee($team->nama_tim)
+            ->assertSee('Putri')
             ->assertSee($team->user->email)
             ->assertSee('Setujui')
             ->assertSee('Tolak');

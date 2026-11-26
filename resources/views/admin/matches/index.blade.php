@@ -45,49 +45,115 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+        @php
+            $teamsPayload = $teams->map(fn ($team) => [
+                'id' => (string) $team->id,
+                'nama_tim' => $team->nama_tim,
+                'asal_sekolah' => $team->asal_sekolah,
+                'kategori' => $team->kategori ?? 'putra',
+            ])->values();
+        @endphp
+
+        <section
+            x-data="{
+                teams: @js($teamsPayload),
+                selectedCategory: @js((string) old('match_category', '')),
+                homeId: @js((string) old('team_home_id', '')),
+                awayId: @js((string) old('team_away_id', '')),
+                init() {
+                    if (!this.selectedCategory && this.homeId) {
+                        const home = this.teams.find(t => t.id === this.homeId);
+                        if (home) this.selectedCategory = home.kategori;
+                    } else if (!this.selectedCategory && this.awayId) {
+                        const away = this.teams.find(t => t.id === this.awayId);
+                        if (away) this.selectedCategory = away.kategori;
+                    }
+                },
+                get homeTeams() {
+                    const cat = this.selectedCategory || (this.awayId ? (this.teams.find(t => t.id === this.awayId)?.kategori || '') : '');
+                    return this.teams.filter(t => (!cat || t.kategori === cat) && t.id !== this.awayId);
+                },
+                get awayTeams() {
+                    const cat = this.selectedCategory || (this.homeId ? (this.teams.find(t => t.id === this.homeId)?.kategori || '') : '');
+                    return this.teams.filter(t => (!cat || t.kategori === cat) && t.id !== this.homeId);
+                },
+                onCategoryChange() {
+                    if (this.selectedCategory) {
+                        const home = this.teams.find(t => t.id === this.homeId);
+                        if (home && home.kategori !== this.selectedCategory) this.homeId = '';
+                        const away = this.teams.find(t => t.id === this.awayId);
+                        if (away && away.kategori !== this.selectedCategory) this.awayId = '';
+                    }
+                },
+                onTeamChange(side) {
+                    const currentId = side === 'home' ? this.homeId : this.awayId;
+                    const team = this.teams.find(t => t.id === currentId);
+                    if (!team) return;
+                    if (!this.selectedCategory) {
+                        this.selectedCategory = team.kategori;
+                    }
+                    if (side === 'home' && this.awayId) {
+                        const away = this.teams.find(t => t.id === this.awayId);
+                        if (away && away.kategori !== team.kategori) this.awayId = '';
+                    }
+                    if (side === 'away' && this.homeId) {
+                        const home = this.teams.find(t => t.id === this.homeId);
+                        if (home && home.kategori !== team.kategori) this.homeId = '';
+                    }
+                }
+            }"
+            class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+        >
             <h2 class="mb-2 font-heading text-xl font-bold uppercase tracking-wide text-garuda-obsidian">Tambah Jadwal Pertandingan</h2>
-            <p class="mb-6 text-sm text-gray-600">Hanya tim yang sudah disetujui yang dapat dijadwalkan.</p>
+            <p class="mb-6 text-sm text-gray-600">Hanya tim yang sudah disetujui dan berada pada kategori yang sama (Putra vs Putra atau Putri vs Putri) yang dapat dijadwalkan.</p>
 
             <form action="{{ route('admin.matches.store') }}" method="POST" class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                 @csrf
                 <div>
-                    <label for="team_home_id" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Tim Kandang (Home)</label>
-                    <select id="team_home_id" name="team_home_id" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
-                        <option value="">Pilih Tim</option>
-                        @foreach ($teams as $team)
-                            <option value="{{ $team->id }}" @selected(old('team_home_id') == $team->id)>{{ $team->nama_tim }} ({{ $team->asal_sekolah }})</option>
-                        @endforeach
+                    <label for="match_category" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Filter Kategori Pertandingan</label>
+                    <select id="match_category" name="match_category" x-model="selectedCategory" @change="onCategoryChange()" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
+                        <option value="">Semua Kategori (Otomatis Sesuai Tim)</option>
+                        <option value="putra">Putra</option>
+                        <option value="putri">Putri</option>
                     </select>
-                    @error('team_home_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="team_home_id" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Tim Kandang (Home)</label>
+                    <select id="team_home_id" name="team_home_id" x-model="homeId" @change="onTeamChange('home')" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
+                        <option value="">Pilih Tim Home</option>
+                        <template x-for="team in homeTeams" :key="team.id">
+                            <option :value="team.id" :selected="homeId === team.id" x-text="`${team.nama_tim} (${team.asal_sekolah}) — ${team.kategori === 'putri' ? 'Putri' : 'Putra'}`"></option>
+                        </template>
+                    </select>
+                    @error('team_home_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="team_away_id" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Tim Tandang (Away)</label>
-                    <select id="team_away_id" name="team_away_id" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
-                        <option value="">Pilih Tim</option>
-                        @foreach ($teams as $team)
-                            <option value="{{ $team->id }}" @selected(old('team_away_id') == $team->id)>{{ $team->nama_tim }} ({{ $team->asal_sekolah }})</option>
-                        @endforeach
+                    <select id="team_away_id" name="team_away_id" x-model="awayId" @change="onTeamChange('away')" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
+                        <option value="">Pilih Tim Away</option>
+                        <template x-for="team in awayTeams" :key="team.id">
+                            <option :value="team.id" :selected="awayId === team.id" x-text="`${team.nama_tim} (${team.asal_sekolah}) — ${team.kategori === 'putri' ? 'Putri' : 'Putra'}`"></option>
+                        </template>
                     </select>
-                    @error('team_away_id') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('team_away_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="waktu_tanding" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Waktu Tanding</label>
                     <input id="waktu_tanding" type="datetime-local" name="waktu_tanding" value="{{ old('waktu_tanding') }}" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
-                    @error('waktu_tanding') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('waktu_tanding') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="lapangan" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Lapangan</label>
                     <input id="lapangan" type="text" name="lapangan" value="{{ old('lapangan') }}" maxlength="255" placeholder="Contoh: Garuda Arena" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
-                    @error('lapangan') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('lapangan') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="babak" class="mb-2 block font-heading text-xs uppercase tracking-wider text-gray-700">Babak</label>
                     <input id="babak" type="text" name="babak" value="{{ old('babak') }}" maxlength="255" placeholder="Contoh: Penyisihan Grup A" required class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-garuda-obsidian focus:border-garuda-pitch focus:outline-none">
-                    @error('babak') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                    @error('babak') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full rounded-xl bg-garuda-mint px-6 py-3 font-heading font-bold uppercase tracking-wider text-garuda-obsidian transition hover:bg-emerald-400">
+                <div class="flex items-end md:col-span-2 lg:col-span-3 lg:justify-end">
+                    <button type="submit" class="w-full rounded-xl bg-garuda-mint px-8 py-3 font-heading font-bold uppercase tracking-wider text-garuda-obsidian transition hover:bg-emerald-400 lg:w-auto">
                         Buat Jadwal
                     </button>
                 </div>
@@ -112,14 +178,95 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($matches as $match)
-                            <tr class="transition hover:bg-gray-50" data-match-row>
+                        @if ($matches->isEmpty())
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center text-gray-400">Belum ada jadwal pertandingan yang dibuat.</td>
+                            </tr>
+                        @endif
+                    </tbody>
+                    @foreach ($matches as $match)
+                        @php
+                            $homePlayersPayload = $match->homeTeam->players->map(fn ($player) => [
+                                'id' => (string) $player->id,
+                                'nama_lengkap' => $player->nama_lengkap,
+                                'nomor_punggung' => $player->nomor_punggung,
+                                'posisi' => $player->posisi,
+                                'jumlah_gol' => $player->jumlah_gol,
+                            ])->values();
+                            $awayPlayersPayload = $match->awayTeam->players->map(fn ($player) => [
+                                'id' => (string) $player->id,
+                                'nama_lengkap' => $player->nama_lengkap,
+                                'nomor_punggung' => $player->nomor_punggung,
+                                'posisi' => $player->posisi,
+                                'jumlah_gol' => $player->jumlah_gol,
+                            ])->values();
+                        @endphp
+                        <tbody
+                            x-data="{
+                                showGoalPanel: @js($match->status_match === 'live'),
+                                teamSide: 'home',
+                                playerId: '',
+                                homePlayers: @js($homePlayersPayload),
+                                awayPlayers: @js($awayPlayersPayload),
+                                goalFeedback: '',
+                                goalPending: false,
+                                get availablePlayers() {
+                                    return this.teamSide === 'home' ? this.homePlayers : this.awayPlayers;
+                                },
+                                onSideChange() {
+                                    this.playerId = '';
+                                },
+                                async submitGoal(event) {
+                                    const form = event.target;
+                                    if (!this.playerId || this.goalPending) return;
+                                    this.goalPending = true;
+                                    this.goalFeedback = 'Mencatat gol...';
+                                    try {
+                                        const formData = new FormData(form);
+                                        const response = await fetch(form.action, {
+                                            method: 'POST',
+                                            headers: {
+                                                Accept: 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                                            },
+                                            body: formData,
+                                        });
+                                        const result = await response.json();
+                                        if (!response.ok || !result.success || !result.data) {
+                                            throw new Error(result.message || 'Gagal mencatat gol.');
+                                        }
+                                        const targetList = this.teamSide === 'home' ? this.homePlayers : this.awayPlayers;
+                                        const scoredPlayer = targetList.find(p => p.id === String(result.data.player_id));
+                                        if (scoredPlayer) {
+                                            scoredPlayer.jumlah_gol = result.data.jumlah_gol;
+                                        }
+                                        const rowGroup = form.closest('[data-match-row]');
+                                        if (rowGroup) {
+                                            rowGroup.querySelector('[data-score-field=\'home\']').value = result.data.skor_home;
+                                            rowGroup.querySelector('[data-score-field=\'away\']').value = result.data.skor_away;
+                                        }
+                                        this.playerId = '';
+                                        this.goalFeedback = result.message;
+                                    } catch (error) {
+                                        this.goalFeedback = error instanceof Error ? error.message : 'Gagal mencatat gol.';
+                                    } finally {
+                                        this.goalPending = false;
+                                    }
+                                }
+                            }"
+                            class="divide-y divide-gray-100 border-b border-gray-200"
+                            data-match-row
+                        >
+                            <tr class="transition hover:bg-gray-50">
                                 <td class="px-4 py-4">
-                                    <span class="block font-semibold text-garuda-obsidian">{{ $match->waktu_tanding }}</span>
+                                    <span class="block font-semibold text-garuda-obsidian">{{ $match->waktu_tanding_formatted }}</span>
                                     <span class="text-xs text-gray-400">{{ $match->lapangan }} ({{ $match->babak }})</span>
                                 </td>
                                 <td class="px-4 py-4 font-heading text-garuda-obsidian">
-                                    {{ $match->homeTeam->nama_tim }} vs {{ $match->awayTeam->nama_tim }}
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span>{{ $match->homeTeam->nama_tim }} vs {{ $match->awayTeam->nama_tim }}</span>
+                                        <x-category-badge :kategori="$match->kategori" />
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     <form id="match-update-{{ $match->id }}" action="{{ route('admin.matches.update', $match) }}" method="POST">
@@ -152,9 +299,18 @@
                                     </select>
                                 </td>
                                 <td class="px-4 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
+                                    <div class="flex flex-wrap items-center justify-center gap-2">
                                         <button form="match-update-{{ $match->id }}" type="submit" class="rounded-lg border border-garuda-gold bg-white px-4 py-2 font-heading text-xs font-bold uppercase text-garuda-obsidian transition hover:bg-amber-50">
                                             Simpan
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="showGoalPanel = !showGoalPanel"
+                                            :aria-expanded="showGoalPanel.toString()"
+                                            class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 font-heading text-xs font-bold uppercase text-garuda-pitch transition hover:bg-garuda-mint hover:text-garuda-obsidian"
+                                            title="Catat pencetak gol"
+                                        >
+                                            ⚽ Gol
                                         </button>
                                         <button
                                             type="button"
@@ -167,12 +323,63 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-gray-400">Belum ada jadwal pertandingan yang dibuat.</td>
+                            <tr x-show="showGoalPanel" x-cloak class="bg-emerald-50/40">
+                                <td colspan="5" class="px-4 py-3">
+                                    <form action="{{ route('admin.matches.recordGoal', $match) }}" method="POST" @submit.prevent="submitGoal($event)" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                        @csrf
+                                        <div class="flex flex-wrap items-center gap-3">
+                                            <span class="inline-flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wider text-garuda-pitch">
+                                                ⚽ Catat Pencetak Gol
+                                            </span>
+                                            <div>
+                                                <label for="goal-side-{{ $match->id }}" class="sr-only">Pilih Tim Pencetak Gol</label>
+                                                <select
+                                                    id="goal-side-{{ $match->id }}"
+                                                    name="team_side"
+                                                    x-model="teamSide"
+                                                    @change="onSideChange()"
+                                                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-garuda-obsidian focus:border-garuda-pitch focus:outline-none"
+                                                >
+                                                    <option value="home">Home — {{ $match->homeTeam->nama_tim }}</option>
+                                                    <option value="away">Away — {{ $match->awayTeam->nama_tim }}</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="goal-player-{{ $match->id }}" class="sr-only">Pilih Pemain Pencetak Gol</label>
+                                                <select
+                                                    id="goal-player-{{ $match->id }}"
+                                                    name="player_id"
+                                                    x-model="playerId"
+                                                    required
+                                                    class="min-w-[220px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-garuda-obsidian focus:border-garuda-pitch focus:outline-none"
+                                                >
+                                                    <option value="">Pilih Pemain Pencetak Gol</option>
+                                                    <template x-for="player in availablePlayers" :key="player.id">
+                                                        <option :value="player.id" x-text="`#${player.nomor_punggung} ${player.nama_lengkap} (${player.posisi}) — ${player.jumlah_gol} gol`"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                            <label class="inline-flex items-center gap-1.5 text-xs text-gray-700">
+                                                <input type="checkbox" name="increment_score" value="1" checked class="rounded border-gray-300 text-garuda-pitch focus:ring-garuda-pitch">
+                                                <span>+1 Skor Tim</span>
+                                            </label>
+                                            <button
+                                                type="submit"
+                                                :disabled="goalPending || !playerId"
+                                                class="rounded-lg bg-garuda-obsidian px-4 py-1.5 font-heading text-xs font-bold uppercase tracking-wider text-garuda-gold transition hover:bg-garuda-pitch hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Tambah Gol
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span x-show="availablePlayers.length === 0" class="text-amber-700">Belum ada pemain di roster tim ini.</span>
+                                            <span x-show="goalFeedback" x-text="goalFeedback" role="status" aria-live="polite" class="font-medium text-garuda-pitch"></span>
+                                        </div>
+                                    </form>
+                                </td>
                             </tr>
-                        @endforelse
-                    </tbody>
+                        </tbody>
+                    @endforeach
                 </table>
             </div>
         </section>

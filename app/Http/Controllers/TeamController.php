@@ -21,7 +21,11 @@ class TeamController extends Controller
             return redirect()->route('admin.teams.index');
         }
 
-        $teams = auth()->user()->teams()->oldest()->get();
+        $teams = auth()->user()
+            ->teams()
+            ->with(['players' => fn ($query) => $query->orderBy('nomor_punggung')])
+            ->oldest()
+            ->get();
 
         return view('peserta.dashboard', compact('teams'));
     }
@@ -31,13 +35,16 @@ class TeamController extends Controller
     {
         $teamName = $request->input('nama_tim');
         $schoolName = $request->input('asal_sekolah');
+        $kategori = $request->input('kategori');
         $request->merge([
             'nama_tim' => is_string($teamName) ? trim($teamName) : $teamName,
             'asal_sekolah' => is_string($schoolName) ? trim($schoolName) : $schoolName,
+            'kategori' => is_string($kategori) ? Str::lower(trim($kategori)) : $kategori,
         ]);
 
         $validated = $request->validate([
             'nama_tim' => 'required|string|max:255',
+            'kategori' => ['required', 'string', Rule::in([Team::KATEGORI_PUTRA, Team::KATEGORI_PUTRI])],
             'jumlah_tim' => 'required|integer|between:1,5',
             'asal_sekolah' => 'required|string|max:255',
             'nama_pelatih' => 'required|string|max:255',
@@ -129,6 +136,7 @@ class TeamController extends Controller
                     Team::create([
                         'user_id' => $user->id,
                         'nama_tim' => $name,
+                        'kategori' => $validated['kategori'],
                         'asal_sekolah' => $validated['asal_sekolah'],
                         'nama_pelatih' => $validated['nama_pelatih'],
                         'no_wa' => $validated['no_wa'],

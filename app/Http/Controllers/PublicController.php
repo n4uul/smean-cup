@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MatchModel;
+use App\Models\Player;
 use App\Models\Team;
 use Illuminate\Contracts\View\View;
 
@@ -14,12 +15,15 @@ class PublicController extends Controller
         $matches = MatchModel::with(['homeTeam', 'awayTeam'])
             ->orderBy('waktu_tanding')
             ->get();
+        $topScorers = Player::topScorers(10)->get();
 
-        return view('welcome', compact('teams', 'matches'));
+        return view('welcome', compact('teams', 'matches', 'topScorers'));
     }
 
     public function schedule(): View
     {
-        return view('public.schedule');
+        $topScorers = Player::topScorers(10)->get();
+
+        return view('public.schedule', compact('topScorers'));
     }
 }

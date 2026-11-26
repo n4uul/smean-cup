@@ -11,8 +11,8 @@ class LiveScoreController extends Controller
     public function index(): JsonResponse
     {
         $matches = MatchModel::with([
-            'homeTeam:id,nama_tim,asal_sekolah',
-            'awayTeam:id,nama_tim,asal_sekolah',
+            'homeTeam:id,nama_tim,asal_sekolah,kategori',
+            'awayTeam:id,nama_tim,asal_sekolah,kategori',
         ])->orderBy('waktu_tanding')->get();
 
         return response()->json([
@@ -25,8 +25,8 @@ class LiveScoreController extends Controller
     public function liveMatches(): JsonResponse
     {
         $matches = MatchModel::with([
-            'homeTeam:id,nama_tim,asal_sekolah',
-            'awayTeam:id,nama_tim,asal_sekolah',
+            'homeTeam:id,nama_tim,asal_sekolah,kategori',
+            'awayTeam:id,nama_tim,asal_sekolah,kategori',
         ])->where('status_match', 'live')
             ->orderBy('waktu_tanding')
             ->get();
